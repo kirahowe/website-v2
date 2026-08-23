@@ -75,6 +75,13 @@
     (is (str/includes? (:body (GET "/2026/jul/4")) "Hello, world"))
     (is (= 404 (:status (GET "/2024")))))
 
+  (testing "month calendars are Sunday-first"
+    ;; March 1, 2026 is a Sunday, so the first row starts with day 1.
+    (let [body (:body (GET "/2026/mar"))]
+      (is (str/includes? body
+                         "<thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead>"))
+      (is (str/includes? body "</thead><tbody><tr><td>1</td>"))))
+
   (testing "month pages link to the neighboring months that have content"
     (let [{:keys [body]} (GET "/2026/jun")]
       (is (str/includes? body "\"/2026/jul\""))     ; newer neighbor

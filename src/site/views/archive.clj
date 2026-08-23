@@ -92,11 +92,11 @@
 ;; --- month page: the feed + a mini calendar ------------------------------
 
 (defn- calendar
-  "A Monday-first month grid; days that have entries link to their archive,
+  "A Sunday-first month grid; days that have entries link to their archive,
   the rest are dimmed."
   [index year month]
   (let [ndays (.lengthOfMonth (YearMonth/of year month))
-        start (dec (.getValue (.getDayOfWeek (LocalDate/of year month 1)))) ; Mon=0
+        start (mod (.getValue (.getDayOfWeek (LocalDate/of year month 1))) 7) ; Sun=0
         active (into #{}
                      (comp (filter (fn [[y m _]] (and (= y year) (= m month))))
                            (map (fn [[_ _ d]] d)))
@@ -112,7 +112,7 @@
       [:span {:aria-hidden "true"} "»"]
       [:span (util/month-name month)]]
      [:table.calendar
-      [:thead [:tr (for [d ["M" "T" "W" "T" "F" "S" "S"]] [:th d])]]
+      [:thead [:tr (for [d ["S" "M" "T" "W" "T" "F" "S"]] [:th d])]]
       [:tbody
        (for [week (partition 7 cells)]
          [:tr
