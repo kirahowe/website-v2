@@ -139,10 +139,11 @@ surface PublishedSite {
         -- no profile of a visitor — and a browser that sends Do Not
         -- Track is not counted at all.
     @guidance
-        -- The home page shows at least config.home_entries recent
-        -- entries, rounded up to whole days, then links onward to the
-        -- month archives. The production server exposes no admin
-        -- surface.
+        -- The home page is a front page, not page one of the stream:
+        -- it shows at least config.home_entries recent entries, rounded
+        -- up to whole days, and when more exist it ends with one link
+        -- to the archive index rather than paginating or continuing
+        -- into a month. The production server exposes no admin surface.
 }
 
 -- A single published entry at its canonical URL.

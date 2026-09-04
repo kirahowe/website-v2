@@ -1,7 +1,9 @@
 (ns site.views.home
   "The home feed: recent entries grouped by day, whole days only, at
-  least :home-entries items — then a link onward to the month archive
-  where the feed left off. No infinite scroll, no page numbers."
+  least :home-entries items. It is a front page, not page one of the
+  stream — the month, type and tag listings are the stream — so when
+  more exists it ends with a single link into the archive index rather
+  than continuing. No infinite scroll, no page numbers."
   (:require [site.util :as util]
             [site.views.components :as c]
             [site.views.layout :as layout]))
@@ -9,35 +11,30 @@
 (def default-home-entries 10)
 
 (defn- take-whole-days
-  "Accumulates day groups (newest first) until at least n entries are
-  included — a day is never split.
-  → {:shown [entries...] :next-entry <first excluded entry or nil>}"
+  "The newest entries, accumulated a day at a time until at least n are
+  included — a day is never split."
   [entries n]
   (loop [groups (partition-by util/day-key entries)
-         shown []
-         cnt 0]
-    (cond
-      (empty? groups) {:shown shown :next-entry nil}
-      (>= cnt n) {:shown shown :next-entry (ffirst groups)}
-      :else (recur (rest groups)
-                   (into shown (first groups))
-                   (+ cnt (count (first groups)))))))
+         shown []]
+    (if (or (empty? groups) (>= (count shown) n))
+      shown
+      (recur (rest groups) (into shown (first groups))))))
 
-(defn- older-link
-  "Continues into the archives at the month of the first entry that
-  didn't make the cut."
-  [entry]
-  (let [month-key [(-> entry :date :year) (-> entry :date :month)]]
-    [:a.feed-more {:href (util/month-url month-key)}
-     "Older → " (util/month-label month-key)]))
+;; Deliberately the archive index, not the month the feed stopped in: that
+;; month's first page opens with the very entries the reader just scrolled
+;; past, because the feed cuts on whole days and month pages cut every
+;; :page-entries, and the two only coincide at a month boundary.
+(def ^:private archive-link
+  [:a.feed-more {:href "/archive"} "More in the archive →"])
 
 (defn home [config index]
   (let [n (or (:home-entries config) default-home-entries)
-        {:keys [shown next-entry]} (take-whole-days (:entries index) n)]
+        entries (:entries index)
+        shown (take-whole-days entries n)]
     (layout/page config {:path "/"}
                  (c/cols (list (c/feed shown)
-                               (when next-entry (older-link next-entry)))
+                               (when (< (count shown) (count entries)) archive-link))
                          (c/sidebar config {:follow :inline}
-                                    (c/recent-links (:entries index) 10)
+                                    (c/recent-links entries 10)
                                     (c/follow-widget config)
                                     (c/top-tags (:tag-counts index) 5))))))

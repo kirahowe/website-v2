@@ -36,7 +36,9 @@
       (is (str/includes? body "nextjournal/markdown"))
       (is (str/includes? body "Rich Hickey"))
       ;; all 8 example entries fit within :home-entries, so the oldest shows
+      ;; and there is nothing to hand off to the archive
       (is (str/includes? body "Babashka"))
+      (is (not (str/includes? body "feed-more")))
       ;; feed previews are the first paragraph only, as plain-text excerpts
       (is (not (str/includes? body "where code sleeps")))
       ;; ...but quotes are short-form: the whole body publishes to the feed
@@ -474,9 +476,9 @@
       (is (str/includes? body "nextjournal/markdown")))
     (testing "the feed stops at the whole-day cut (later days aren't in the feed)"
       (is (not (str/includes? body "June 21, 2026"))))
-    (testing "the feed continues into the month archive of the next entry"
-      (is (str/includes? body "Older"))
-      (is (str/includes? body "\"/2026/jun\"")))))
+    (testing "the feed hands off to the archive index, not to a month page"
+      (is (= ["<a class=\"feed-more\" href=\"/archive\">"]
+             (re-seq #"<a class=\"feed-more\"[^>]*>" body))))))
 
 (deftest feed-count-is-configurable
   (testing ":feed-entries caps how many entries the Atom feed carries"
