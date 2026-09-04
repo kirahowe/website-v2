@@ -185,6 +185,14 @@ surface EntryPage {
     @guarantee WikilinksNeverDangle
         -- [[wikilinks]] resolve by filename to the target entry's URL;
         -- an unresolved link renders as plain text, never a dead link.
+    @guarantee SectionsLinkable
+        -- Every heading in a rendered body carries an id: the site's
+        -- slug of its text (the rule entry URLs follow), made unique
+        -- within that body. On the entry's own page — and on a static
+        -- Page — each heading also ends in a link to itself, so a
+        -- section of a long post can be pointed at. Syndicated and
+        -- feed-row copies of the body keep the ids but not the links:
+        -- a fragment link is noise inside another document.
     @guidance
         -- Display follows the type: a post previews its opening in the
         -- feed and offers the rest behind a reading-time link, while the

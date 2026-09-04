@@ -250,7 +250,7 @@
   (page config {:title title :path path}
         [:article.article.prose
          [:h1 title]
-         (rest (markdown/render body nil))]))
+         (rest (markdown/render body nil {:anchors? true}))]))
 
 (defn not-found [config]
   (page config {:title "Not found"}

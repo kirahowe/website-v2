@@ -58,7 +58,10 @@
       (is (= "public, max-age=300, stale-while-revalidate=86400"
              (get headers "Cache-Control")))
       (is (nil? (get headers "Cloudflare-CDN-Cache-Control")))
-      (is (str/includes? body "How it works</h2>"))  ; ## heading
+      ;; ## heading: a slug id and, on its own page, a link to itself
+      (is (str/includes? body (str "<h2 id=\"how-it-works\">How it works"
+                                   "<a aria-label=\"Link to this section\" class=\"anchor\""
+                                   " href=\"#how-it-works\">#</a></h2>")))
       (is (str/includes? body "<code"))              ; inline code
       (is (str/includes? body "entry-url")))
     (let [{:keys [body]} (GET "/2025/nov/12/repl-driven")]
@@ -479,6 +482,17 @@
     (testing "the feed hands off to the archive index, not to a month page"
       (is (= ["<a class=\"feed-more\" href=\"/archive\">"]
              (re-seq #"<a class=\"feed-more\"[^>]*>" body))))))
+
+(deftest section-anchors-stay-on-the-page
+  (testing "a body on its own page ends each heading in a self-link"
+    (is (str/includes? (:body (GET "/2026/jul/4/hello-world")) "class=\"anchor\""))
+    (is (str/includes? (:body (GET "/privacy")) "class=\"anchor\"")))
+  (testing "the Atom feed carries the heading ids but not the links — a fragment link is noise inside a reader"
+    (let [feed (:body (GET "/feed.xml"))]
+      (is (str/includes? feed "how-it-works"))
+      (is (not (str/includes? feed "anchor")))))
+  (testing "feed rows don't carry them either"
+    (is (not (str/includes? (:body (GET "/")) "class=\"anchor\"")))))
 
 (deftest feed-count-is-configurable
   (testing ":feed-entries caps how many entries the Atom feed carries"

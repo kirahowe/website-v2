@@ -27,6 +27,7 @@
                    [site.tui-test]
                    [site.config-test]
                    [site.content-test]
+                   [site.markdown-test]
                    [site.routes-test]
                    [site.search-test]
                    [site.cdn-test]

@@ -9,7 +9,8 @@
   (:require [clojure.string :as str]
             [hiccup2.core :as h]
             [nextjournal.markdown :as md]
-            [nextjournal.markdown.utils :as md.utils]))
+            [nextjournal.markdown.utils :as md.utils]
+            [site.util :as util]))
 
 (def ^:private parse-ctx
   (-> md.utils/empty-doc
@@ -78,21 +79,34 @@
 (defn- strip-tags [s]
   (str/replace (str s) #"<[^>]*>" ""))
 
-(defn- clean-id-heading
-  "The default heading renderer, except raw HTML is stripped from the
-  generated anchor id — a <sup> in a heading otherwise leaks tags into
-  it."
-  [ctx {:as node :keys [attrs]}]
-  ((:heading md/default-hiccup-renderers)
-   ctx
-   (cond-> node (:id attrs) (update-in [:attrs :id] strip-tags))))
+(defn- heading-renderer
+  "Headings get an id — the site's slug of their text, the rule entry
+  URLs follow, so a section's fragment is as clean as its page's path —
+  made unique within one render (setup, setup-2, …). The library's own
+  ids kept punctuation (`why?`, quotes) and leaked raw HTML tags. With
+  `anchors?` each heading also ends in a link to itself, the handle a
+  reader copies to point at a section; views rendering a body on its
+  own page ask for it, feed rows and the Atom feed don't, since their
+  HTML lands in other documents where a fragment link is noise."
+  [anchors?]
+  (let [seen (atom {})]
+    (fn [ctx node]
+      (let [slug (util/slugify (strip-tags (md/node->text node)))
+            base (if (str/blank? slug) "section" slug)
+            n (get (swap! seen update base (fnil inc 0)) base)
+            id (if (= 1 n) base (str base "-" n))
+            heading ((:heading md/default-hiccup-renderers) ctx (assoc-in node [:attrs :id] id))]
+        (cond-> heading
+          anchors? (conj [:a.anchor {:href (str "#" id) :aria-label "Link to this section"} "#"]))))))
 
 (defn render
   "markdown string → hiccup. `wikilinks` is {lowercased filename → url}
   (built by the content index and carried on each entry); without it,
-  [[links]] render as plain text."
+  [[links]] render as plain text. Options:
+    :anchors?  end each heading in a link to itself (a body on its own page)"
   ([s] (render s nil))
-  ([s wikilinks]
+  ([s wikilinks] (render s wikilinks nil))
+  ([s wikilinks {:keys [anchors?]}]
    (let [resolve-target (fn [t]
                           (let [t (-> (str t)
                                       (str/split #"#") first        ; drop heading anchors
@@ -103,7 +117,7 @@
                           :internal-link (wikilink-renderer resolve-target)
                           :html-inline raw-html
                           :html-block raw-html
-                          :heading clean-id-heading)]
+                          :heading (heading-renderer anchors?))]
      (md/->hiccup renderers (md/parse parse-ctx (preprocess s))))))
 
 ;; --- the lede: what a feed row previews ----------------------------------

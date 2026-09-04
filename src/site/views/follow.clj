@@ -19,7 +19,8 @@
   revisiting the number."
   [config page]
   (let [title (or (:title page) "Follow")
-        blocks (when (:body page) (rest (markdown/render (:body page) nil)))
+        blocks (when (:body page)
+                 (rest (markdown/render (:body page) nil {:anchors? true})))
         [intro detail] (split-at 3 blocks)]
     (layout/page config {:title title :path "/follow"}
                  [:article.article.prose

@@ -151,7 +151,7 @@ a:hover { text-decoration-thickness: 2px; }
 /* No text to rule. The wordmark and buttons are shapes (they invert to an
    accent fill on hover — see .brand, .btn); the icon and × glyph controls
    carry their own muted → accent hover at their own definitions (.permalink,
-   .field-clear, .filter-x). */
+   .field-clear, .filter-x, the section .anchor). */
 .brand, .btn, .permalink { text-decoration: none; }
 
 /* A ledger row and a search facet are each a single anchor spanning a date
@@ -293,6 +293,28 @@ a:hover { text-decoration-thickness: 2px; }
   letter-spacing: var(--ls-tight);
   color: var(--head);
 }
+
+/* A prose heading ends in a link to itself on its own page — the handle a
+   reader copies to point at a section. It shows only while the heading is
+   hovered or the link focused; where nothing can hover (touch) it stays
+   visible, muted, since there is nothing to reveal it. Plain weight and the
+   mono voice keep it chrome rather than part of the title. */
+.prose .anchor {
+  margin-left: 0.4em;
+  font-family: var(--mono);
+  font-size: .8em;
+  font-weight: 400;
+  color: var(--muted);
+  text-decoration: none;
+  opacity: 0;
+}
+.prose :is(h1, h2, h3, h4, h5, h6):hover .anchor,
+.prose .anchor:focus-visible { opacity: 1; }
+.prose .anchor:hover { color: var(--accent); }
+@media (hover: none) { .prose .anchor { opacity: 1; } }
+/* A section arrived at by its link sits a little below the top edge rather
+   than flush against it, so it still reads as a heading with room above. */
+.prose :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: var(--sp5); }
 
 /* Code stays upright whatever encloses it — a snippet inside a quote is still
    a snippet, not an italic aside. */
