@@ -25,6 +25,7 @@
         :requires ([clojure.test :as t]
                    [site.author-test]
                    [site.tui-test]
+                   [site.util-test]
                    [site.config-test]
                    [site.content-test]
                    [site.markdown-test]

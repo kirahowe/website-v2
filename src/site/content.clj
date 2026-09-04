@@ -186,8 +186,14 @@
 (defn- base-name [file]
   (str/replace (.getName (io/file (str file))) #"\.md$" ""))
 
-(defn- normalize-tags [tags]
-  (into #{} (map keyword) tags))
+(defn- normalize-tags
+  "Tags as keywords, each passed through the slug rule: a tag is a URL
+  segment (/tags/<tag>), and the admin app slugifies what it writes, so
+  reading through the same function keeps a hand-edited file from
+  minting a tag URL nothing else on the site would produce. One that
+  slugs to nothing is dropped rather than kept as an empty keyword."
+  [tags]
+  (into #{} (comp (map util/slugify) (remove str/blank?) (map keyword)) tags))
 
 (defn- title-for
   "The title is the filename, for every type; a `title` property overrides

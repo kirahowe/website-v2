@@ -157,7 +157,7 @@
   (let [dir (str (Files/createTempDirectory "content-test" (into-array FileAttribute [])))
         day (io/file dir "2026" "07" "10")]
     (.mkdirs day)
-    (spit (io/file day "My Great Idea.md") "---\ntags:\n  - clojure\n---\nSee [[Everything fails]] for more.")
+    (spit (io/file day "My Great Idea.md") "---\ntags:\n  - clojure\n  - Data Science\n  - '???'\n---\nSee [[Everything fails]] for more.")
     (spit (io/file day "Everything fails.md") "---\ntype: quote\nauthor: W. Vogels\n---\nEverything fails, all the time.")
     (let [index (content/build-index (assoc config :content-path dir))
           post (get (:by-path index) "/2026/jul/10/my-great-idea")
@@ -165,6 +165,8 @@
       (testing "filename is the title; slug is slugified from it"
         (is (= "My Great Idea" (:title post)))
         (is (= :post (:type post)) "no type property means post"))
+      (testing "a hand-written tag reads through the slug rule; one that slugs to nothing is dropped"
+        (is (= #{:clojure :data-science} (:tags post))))
       (testing "a quote is titled by its filename, like any other type"
         (is (= "Everything fails" (:title quote)))
         (is (= "W. Vogels" (:source quote))))
